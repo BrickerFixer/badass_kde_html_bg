@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PS2 BIOS Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000000;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="ps2"></canvas>
+    <script>
+        const canvas = document.getElementById('ps2');
+        const ctx = canvas.getContext('2d');
+        const particles = [];
+        const numParticles = 7;
+        const trailLength = 12; // Increased trail length
+        let time = 0;
+
+        function rotate3D(x, y, z, angleX, angleY) {
+            // Rotate around Y axis
+            let rotY = {
+                x: x * Math.cos(angleY) + z * Math.sin(angleY),
+                y: y,
+                z: -x * Math.sin(angleY) + z * Math.cos(angleY)
+            };
+            
+            // Rotate around X axis
+            let rotX = {
+                x: rotY.x,
+                y: rotY.y * Math.cos(angleX) - rotY.z * Math.sin(angleX),
+                z: rotY.y * Math.sin(angleX) + rotY.z * Math.cos(angleX)
+            };
+            
+            return rotX;
+        }
+
+        class Particle {
+            constructor(index) {
+                this.index = index;
+                this.trails = [];
+                this.offset = (index * (Math.PI * 2) / numParticles);
+                this.speed = 1 + (index * 0.15); // Each particle moves progressively faster
+            }
+
+            update() {
+                const baseRadius = Math.min(canvas.width, canvas.height) * 0.2;
+                const angle = (time * this.speed) + this.offset;
+                
+                // Calculate base circle position
+                let x = Math.cos(angle) * baseRadius;
+                let y = Math.sin(angle) * baseRadius;
+                let z = 0;
+
+                // Apply 3D rotation
+                const rot = rotate3D(
+                    x, y, z,
+                    Math.sin(time * 1) * 0.5,  // X rotation
+                    time * 1                    // Y rotation
+                );
+
+                // Apply perspective
+                const perspective = 1000;
+                const scale = perspective / (perspective + rot.z);
+                const screenX = canvas.width/2 + rot.x * scale;
+                const screenY = canvas.height/2 + rot.y * scale;
+
+                this.trails.unshift({x: screenX, y: screenY, scale});
+                if (this.trails.length > trailLength) {
+                    this.trails.pop();
+                }
+
+                // Draw glow effects first
+                this.trails.forEach((pos, i) => {
+                    const alpha = 1 - (i / trailLength);
+                    const size = (8 - (i * 0.4)) * pos.scale;
+                    
+                    // Outer glow
+                    ctx.shadowBlur = 25 * pos.scale; // Increased blur
+                    ctx.shadowColor = 'rgba(88, 142, 255, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, Math.max(size + 4, 4), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(88, 142, 255, ${alpha * 0.4})`;
+                    ctx.fill();
+
+                    // Middle glow
+                    ctx.shadowBlur = 15 * pos.scale;
+                    ctx.shadowColor = 'rgba(150, 180, 255, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, Math.max(size + 2, 3), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(150, 180, 255, ${alpha * 0.6})`;
+                    ctx.fill();
+
+                    // Core
+                    ctx.shadowBlur = 8 * pos.scale;
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, Math.max(size, 2), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
+                    ctx.fill();
+                });
+                
+                // Reset shadow for next frame
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function init() {
+            particles.length = 0;
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle(i));
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; // Slightly darker trail fade
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => particle.update());
+            
+            time += 0.02;
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            init();
+        });
+
+        resize();
+        init();
+        animate();
+    </script>
+</body>
+</html>

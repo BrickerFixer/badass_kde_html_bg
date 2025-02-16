@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Collection of HTML wallpapers for KDE Plasma desktop">
+    <meta name="author" content="bricker">
+    <meta name="theme-color" content="#151515">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <title>HTML Wallpapers Collection</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #151515 url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKMjIz/GWEMsLCwMGIKwARwCsAEYQpAggAARjgGkVq5IbEAAAAASUVORK5CYII=') repeat;
+            color: #e0e0e0;
+            font-family: 'Space Mono', monospace;
+            line-height: 1.6;
+            image-rendering: pixelated;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            border: 4px solid #333;
+            background: #222;
+            box-shadow: 8px 8px 0 #000;
+            image-rendering: pixelated;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 4px solid #333;
+            padding: 1rem;
+            background: linear-gradient(45deg, #1a1a1a 25%, transparent 25%),
+                        linear-gradient(-45deg, #1a1a1a 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #1a1a1a 75%),
+                        linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        .mascot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 100px;
+            height: 100px;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .mascot img {
+            width: 100%;
+            height: 100%;
+            transform-origin: center;
+        }
+
+        .mascot.talking img {
+            animation: torobounce 0.2s;
+            animation-direction: alternate;
+            animation-timing-function: cubic-bezier(.5, 0.05, 1, .5);
+            animation-iteration-count: infinite;
+            -webkit-animation-name: torobounce;
+            -webkit-animation-duration: 0.2s;
+            -webkit-animation-direction: alternate;
+            -webkit-animation-timing-function: cubic-bezier(.5, 0.05, 1, .5);
+            -webkit-animation-iteration-count: infinite;
+        }
+
+        @keyframes torobounce {
+            from {
+                transform: translate3d(0, 0, 0);
+            }
+            to {
+                transform: translate3d(0, 20px, 0);
+            }
+        }
+
+        @-webkit-keyframes torobounce {
+            from {
+                -webkit-transform: translate3d(0, 0, 0);
+                transform: translate3d(0, 0, 0);
+            }
+            to {
+                -webkit-transform: translate3d(0, 20px, 0);
+                transform: translate3d(0, 20px, 0);
+            }
+        }
+
+        .mascot:hover {
+            transform: scale(1.1);
+        }
+
+        .mascot-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .wallpaper-card {
+            background: #1a1a1a;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            border: 4px solid #333;
+            box-shadow: 4px 4px 0 #000;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .wallpaper-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .preview {
+            width: 100%;
+            height: 200px;
+            background: #1a1a1a;
+            position: relative;
+            overflow: hidden;
+            pointer-events: none; /* Prevent iframe interaction */
+        }
+
+        .preview iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            pointer-events: none;
+            transform: scale(1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .preview.loaded iframe {
+            opacity: 1;
+        }
+
+        .preview::before {
+            content: 'Loading...';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-family: monospace;
+        }
+
+        .info {
+            padding: 1rem;
+            border-top: 4px solid #333;
+            background: #222;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 1rem;
+            border-radius: 5px;
+            max-width: 300px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.1s;
+            font-family: monospace;
+            border: 2px solid #444;
+        }
+
+        @keyframes followbounce {
+            from {
+                transform: translate3d(0, 0, 0);
+            }
+            to {
+                transform: translate3d(0, 20px, 0);
+            }
+        }
+
+        @keyframes blink {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.1); }
+        }
+
+        .description {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 0.5rem;
+        }
+
+        .tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            background: #333;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+            color: #aaa;
+            border: 2px solid #444;
+        }
+
+        /* Add styles for dialog buttons */
+        .dialog-buttons {
+            display: none;
+            margin-top: 10px;
+            gap: 10px;
+        }
+
+        .dialog-buttons button {
+            background: #333;
+            border: 2px solid #444;
+            color: #fff;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: monospace;
+            transition: all 0.3s;
+        }
+
+        .dialog-buttons button:hover {
+            background: #444;
+            transform: translateY(-2px);
+        }
+
+        .tooltip.with-buttons {
+            pointer-events: all;
+        }
+
+        .copy-notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .wallpaper-card.copied .copy-notification {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HTML Wallpapers Collection (VERY WIP)</h1>
+            <p>Interactive wallpapers for your KDE Plasma desktop</p>
+        </div>
+
+        <div class="gallery">
+            <div class="wallpaper-card">
+                <div class="preview">
+                    <iframe src="ps2_bios.html"></iframe>
+                </div>
+                <div class="info">
+                    <h3>PS2 BIOS</h3>
+                    <p class="description">Feel the darkness... Nostalgic recreation of PS2 bios featuring the ambient lights that go around in circles, chasing eachother in harmony. They're glowy and cool, i guess. feel old! hehe. yeaah...</p>
+                    <div class="tags">
+                        <span class="tag">Retro</span>
+                        <span class="tag">Windows 98</span>
+                        <span class="tag">Animation</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wallpaper-card">
+                <div class="preview">
+                    <iframe src="zx_stripes.html"></iframe>
+                </div>
+                <div class="info">
+                    <h3>Sinclair's art</h3>
+                    <p class="description">Inspired by zx spectrum design patterns that were on the case and in the menu that contained casette launch and spectrum BASIC options for launch.</p>
+                    <div class="tags">
+                        <span class="tag">i-mode</span>
+                        <span class="tag">Pixel Art</span>
+                        <span class="tag">Retro Tech</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wallpaper-card">
+                <div class="preview">
+                    <iframe src="starfield.html"></iframe>
+                </div>
+                <div class="info">
+                    <h3>Starfield</h3>
+                    <p class="description">Buttery smooth stars</p>
+                    <div class="tags">
+                        <span class="tag">Web 1.0</span>
+                        <span class="tag">Nostalgic</span>
+                        <span class="tag">Windows 98</span>
+                    </div>
+                </div>
+            </div>
+            <div class="wallpaper-card">
+                <div class="preview">
+                    <iframe src="starfield_retro.html"></iframe>
+                </div>
+                <div class="info">
+                    <h3>Starfield Win32</h3>
+                    <p class="description">Crunchy pixelated stars</p>
+                    <div class="tags">
+                        <span class="tag">Web 1.0</span>
+                        <span class="tag">Nostalgic</span>
+                        <span class="tag">Windows 98</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wallpaper-card">
+                <div class="preview">
+                    <iframe src="win98_channels.html"></iframe>
+                </div>
+                <div class="info">
+                    <h3>Web Channels</h3>
+                    <p class="description">Windows 98 Active Desktop and Web Channels interface recreation. There should be something more, like animated elements. Will do them later.</p>
+                    <div class="tags">
+                        <span class="tag">Windows 98</span>
+                        <span class="tag">Active Desktop</span>
+                        <span class="tag">Glitch</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wallpaper-card">
+                <div class="preview">
+                    <iframe src="genx_soft.html"></iframe>
+                </div>
+                <div class="info">
+                    <h3>Gen X Soft Club</h3>
+                    <p class="description">Soft aesthetic inspired by late 90s design. (REMOVED, COULDN'T FIND PIC WITHOUT COPYRIGHT INFRINGEMENT)</p>
+                    <div class="tags">
+                        <span class="tag">Aesthetic</span>
+                        <span class="tag">Minimal</span>
+                        <span class="tag">Ambient</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add new cards -->
+            <div class="wallpaper-card">
+                <div class="preview">
+                    <iframe src="nintendo_ds.html"></iframe>
+                </div>
+                <div class="info">
+                    <h3>Nintendo DS BIOS</h3>
+                    <p class="description">Inspired by Nintendo DS boot screen. Features animated grid patterns with subtle wave effects.</p>
+                    <div class="tags">
+                        <span class="tag">Nintendo</span>
+                        <span class="tag">Gaming</span>
+                        <span class="tag">Grid</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wallpaper-card">
+                <div class="preview">
+                    <iframe src="nintendo_ds_dark.html"></iframe>
+                </div>
+                <div class="info">
+                    <h3>Nintendo DS BIOS Dark</h3>
+                    <p class="description">Dark variant of the Nintendo DS boot screen animation.</p>
+                    <div class="tags">
+                        <span class="tag">Nintendo</span>
+                        <span class="tag">Dark</span>
+                        <span class="tag">Grid</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wallpaper-card">
+                <div class="preview">
+                    <iframe src="win98.html"></iframe>
+                </div>
+                <div class="info">
+                    <h3>Windows 98 Grid</h3>
+                    <p class="description">Classic Windows 98 desktop with animated grid pattern and subtle vignette.</p>
+                    <div class="tags">
+                        <span class="tag">Windows 98</span>
+                        <span class="tag">Grid</span>
+                        <span class="tag">Retro</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wallpaper-card">
+                <div class="preview">
+                    <iframe src="sony_connected.html"></iframe>
+                </div>
+                <div class="info">
+                    <h3>Sony Connected</h3>
+                    <p class="description">Inspired by Sony's Connected Identity system. Features rotating 3D text and glitch effects.</p>
+                    <div class="tags">
+                        <span class="tag">Sony</span>
+                        <span class="tag">3D</span>
+                        <span class="tag">Corporate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add buttons to tooltip -->
+    <div class="tooltip" id="tooltip">
+        <div class="dialog-text"></div>
+        <div class="dialog-buttons">
+            <button id="btnYes">Yes</button>
+            <button id="btnNo">No</button>
+        </div>
+    </div>
+
+    <div class="mascot">
+        <img src="toro.png" alt="Toro" id="toro">
+    </div>
+
+    <script>
+        // Add preview optimization
+        function optimizePreview(iframe) {
+            const preview = iframe.parentElement;
+            
+            iframe.onload = () => {
+                try {
+                    // Stop animation loop in preview
+                    const iframeWindow = iframe.contentWindow;
+                    const originalRAF = iframeWindow.requestAnimationFrame;
+                    let firstFrame = true;
+
+                    iframeWindow.requestAnimationFrame = (callback) => {
+                        if (firstFrame) {
+                            firstFrame = false;
+                            originalRAF(callback);
+                            // After first frame, restore RAF but make it do nothing
+                            iframeWindow.requestAnimationFrame = () => {};
+                        }
+                    };
+
+                    preview.classList.add('loaded');
+                } catch (e) {
+                    console.warn('Could not optimize preview:', e);
+                }
+            };
+        }
+
+        // Initialize all previews
+        document.querySelectorAll('.preview iframe').forEach(optimizePreview);
+
+        // Handle dynamic preview loading
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const iframe = entry.target.querySelector('iframe');
+                    if (iframe && !iframe.src) {
+                        iframe.src = iframe.dataset.src;
+                    }
+                }
+            });
+        }, { rootMargin: '50px' });
+
+        document.querySelectorAll('.preview').forEach(preview => {
+            const iframe = preview.querySelector('iframe');
+            // Store src in data attribute and remove it
+            iframe.dataset.src = iframe.src;
+            iframe.removeAttribute('src');
+            observer.observe(preview);
+        });
+
+        const mascot = document.querySelector('.mascot');
+        const tooltip = document.getElementById('tooltip');
+        const dialogText = tooltip.querySelector('.dialog-text');
+        const dialogButtons = tooltip.querySelector('.dialog-buttons');
+        let typeInterval;
+
+        const DIALOGS = {
+            start: "コンニチハ! Want to use these wallpapers?",
+            internet_check: "Got PC with constant internet access?",
+            online_method: [
+                "Great! Here's how to use them online:",
+                "1. Install 'HTML Wallpaper' in KDE",
+                "2. Copy any wallpaper page URL",
+                "3. Paste URL in wallpaper settings",
+                "All done! Enjoy your wallpaper! ＼(＾▽＾)／"
+            ],
+            offline_method: [
+                "No problem! Here's how to use them offline:",
+                "1. Install 'HTML Wallpaper' in KDE",
+                "2. Download these HTML files",
+                "3. Select file in wallpaper settings",
+                "All done! Enjoy your wallpaper! ＼(＾▽＾)／"
+            ]
+        };
+
+        let currentPath = [];
+
+        function showButtons(show) {
+            dialogButtons.style.display = show ? 'flex' : 'none';
+            tooltip.classList.toggle('with-buttons', show);
+        }
+
+        async function typeText(text) {
+            if (typeInterval) clearInterval(typeInterval);
+            
+            dialogText.textContent = '';
+            mascot.classList.add('talking');
+            tooltip.style.opacity = '1';
+            
+            const mascotRect = mascot.getBoundingClientRect();
+            tooltip.style.left = (mascotRect.left - 320) + 'px';
+            tooltip.style.top = (mascotRect.top - 80) + 'px';
+            
+            return new Promise(resolve => {
+                let index = 0;
+                typeInterval = setInterval(() => {
+                    if (index < text.length) {
+                        dialogText.textContent += text[index];
+                        index++;
+                    } else {
+                        clearInterval(typeInterval);
+                        mascot.classList.remove('talking');
+                        resolve();
+                    }
+                }, 50);
+            });
+        }
+
+        async function handleDialog(response = null) {
+            if (response !== null) {
+                if (currentPath[currentPath.length - 1] === 'internet_check') {
+                    const dialogSet = response ? DIALOGS.online_method : DIALOGS.offline_method;
+                    showButtons(false);
+                    for (const text of dialogSet) {
+                        await typeText(text);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
+                    currentPath = [];
+                    return;
+                }
+            }
+
+            if (currentPath.length === 0) {
+                currentPath.push('start');
+                await typeText(DIALOGS.start);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                currentPath.push('internet_check');
+                await typeText(DIALOGS.internet_check);
+                showButtons(true);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('btnYes').onclick = () => handleDialog(true);
+        document.getElementById('btnNo').onclick = () => handleDialog(false);
+        mascot.onclick = () => {
+            if (currentPath.length === 0) handleDialog();
+        };
+
+        // Start initial dialog after a delay
+        setTimeout(() => handleDialog(), 1000);
+
+        // Add after preview optimization code
+
+        // URL copy functionality
+        function setupWallpaperCards() {
+            document.querySelectorAll('.wallpaper-card').forEach(card => {
+                // Add copy notification element
+                const notification = document.createElement('div');
+                notification.className = 'copy-notification';
+                notification.textContent = 'URL Copied!';
+                card.appendChild(notification);
+
+                card.addEventListener('click', async () => {
+                    const iframe = card.querySelector('iframe');
+                    const url = new URL(iframe.dataset.src || iframe.src, window.location.href).href;
+
+                    try {
+                        await navigator.clipboard.writeText(url);
+                        card.classList.add('copied');
+                        setTimeout(() => card.classList.remove('copied'), 2000);
+                    } catch (err) {
+                        console.error('Failed to copy:', err);
+                        notification.textContent = 'Failed to copy URL';
+                        card.classList.add('copied');
+                        setTimeout(() => card.classList.remove('copied'), 2000);
+                    }
+                });
+            });
+        }
+
+        // Initialize copy functionality
+        setupWallpaperCards();
+    </script>
+</body>
+</html>

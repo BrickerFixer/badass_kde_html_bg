@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ZX Spectrum Stripes</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000000;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100vh;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="zx"></canvas>
+    <script>
+        const canvas = document.getElementById('zx');
+        const ctx = canvas.getContext('2d');
+        
+        // Fixed color order
+        const ZX_COLORS = [
+            '#e0192a', // RED
+            '#ef9a20', // YELLOW
+            '#3fa65b', // GREEN
+            '#4fb7e5'  // BLUE
+        ];
+
+        // Easing function for smooth animation
+        function easeOutCubic(x) {
+            return 1 - Math.pow(1 - x, 3);
+        }
+
+        class ColorStripe {
+            constructor(index) {
+                this.colorIndex = index % ZX_COLORS.length;
+                this.reset(true);
+            }
+
+            reset(initial = false) {
+                this.width = 0;
+                // Calculate width to reach screen corners at 45 degrees
+                this.maxWidth = Math.max(canvas.width, canvas.height);
+                this.height = 100; // Thicker stripes
+                // Space stripes evenly across screen height
+                const totalHeight = canvas.height + this.height * 2;
+                const spacing = totalHeight / 4;
+                this.y = -this.height + (this.colorIndex * spacing);
+                this.color = ZX_COLORS[this.colorIndex];
+                this.progress = 0;
+                this.drawDuration = 120; // Frames for drawing animation
+                this.state = initial ? 'waiting' : 'drawing';
+                this.stateTime = 0;
+                this.waitTime = 3000; // Time to stay visible
+                this.opacity = 1;
+                this.fadeSpeed = 0.02;
+            }
+
+            update() {
+                switch(this.state) {
+                    case 'waiting':
+                        this.stateTime++;
+                        if (this.stateTime > 60 + (this.colorIndex * 45)) {
+                            this.state = 'drawing';
+                            this.stateTime = 0;
+                        }
+                        break;
+
+                    case 'drawing':
+                        this.stateTime++;
+                        this.progress = this.stateTime / this.drawDuration;
+                        if (this.progress >= 1) {
+                            this.progress = 1;
+                            this.state = 'visible';
+                            this.stateTime = 0;
+                        }
+                        this.width = this.maxWidth * easeOutCubic(this.progress);
+                        break;
+
+                    case 'visible':
+                        this.stateTime++;
+                        if (this.stateTime > this.waitTime) {
+                            this.state = 'fading';
+                        }
+                        break;
+
+                    case 'fading':
+                        this.opacity -= this.fadeSpeed;
+                        if (this.opacity <= 0) {
+                            this.reset();
+                        }
+                        break;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.save();
+                ctx.translate(0, this.y);
+                ctx.transform(1, 1, 0, -1, 0, 0);
+                ctx.fillRect(0, 0, this.width, this.height);
+                ctx.restore();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        const stripes = Array(4).fill(null).map((_, i) => new ColorStripe(i));
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function animate() {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            stripes.forEach(stripe => {
+                stripe.update();
+                stripe.draw();
+            });
+            
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</body>
+</html>

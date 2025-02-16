@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nintendo DS BIOS Background</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: #000000;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="grid"></canvas>
+    <script>
+        const canvas = document.getElementById('grid');
+        const ctx = canvas.getContext('2d');
+        let time = 0;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(0,149,255,0.3)';
+            ctx.lineWidth = 2; // Thicker lines
+            
+            const spacing = 90; // Bigger grid cells
+            const rows = Math.ceil(canvas.height / spacing);
+            const cols = Math.ceil(canvas.width / spacing);
+
+            // Draw vertical lines
+            for(let x = 0; x <= cols; x++) {
+                ctx.beginPath();
+                for(let y = 0; y <= rows; y++) {
+                    const distX = Math.sin(y * 5 + time) * 10; // Bigger wave amplitude
+                    const px = x * spacing + distX;
+                    
+                    if(y === 0) ctx.moveTo(px, y * spacing);
+                    else ctx.lineTo(px, y * spacing);
+                }
+                ctx.stroke();
+            }
+
+            // Draw horizontal lines
+            for(let y = 0; y <= rows; y++) {
+                ctx.beginPath();
+                for(let x = 0; x <= cols; x++) {
+                    const distY = Math.sin(x * 5 + time) * 10; // Bigger wave amplitude
+                    const py = y * spacing + distY;
+                    
+                    if(x === 0) ctx.moveTo(x * spacing, py);
+                    else ctx.lineTo(x * spacing, py);
+                }
+                ctx.stroke();
+            }
+
+            time += 0.02;
+            requestAnimationFrame(drawGrid);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        drawGrid();
+    </script>
+</body>
+</html>

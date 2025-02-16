@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Windows 9x Starfield</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000000;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+    <script>
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        const stars = [];
+        const numStars = 400;
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = (Math.random() - 0.5) * 2000;
+                this.y = (Math.random() - 0.5) * 2000;
+                this.z = Math.random() * 2000;
+                this.color = Math.random() < 0.5 ? '#FFFFFF' : '#4488FF';
+            }
+
+            update() {
+                this.z -= 10;
+                if (this.z <= 0) this.reset();
+                
+                const factor = 400 / this.z;
+                const x = this.x * factor + centerX;
+                const y = this.y * factor + centerY;
+                const size = factor * 2;
+
+                if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) {
+                    this.reset();
+                    return;
+                }
+
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(x, y, Math.min(size, 4), 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function init() {
+            for (let i = 0; i < numStars; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            stars.forEach(star => star.update());
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            stars.length = 0;
+            init();
+        });
+
+        resize();
+        init();
+        animate();
+    </script>
+</body>
+</html>

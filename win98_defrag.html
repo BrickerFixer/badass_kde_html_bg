@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Windows 98 Defragmenter</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000000;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        canvas {
+            width: 100%;
+            height: 100vh;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="defrag"></canvas>
+    <script>
+        const canvas = document.getElementById('defrag');
+        const ctx = canvas.getContext('2d');
+        const colors = {
+            empty: '#000080',      // Navy blue background
+            unfragmented: '#00FF00', // Green blocks
+            fragmented: '#FF0000',   // Red blocks
+            compressed: '#0000FF',    // Blue blocks
+            system: '#FFFF00'        // Yellow blocks
+        };
+
+        class Block {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.moving = false;
+                this.targetX = x;
+                this.targetY = y;
+                this.speed = 2;
+            }
+
+            update() {
+                if (this.moving) {
+                    const dx = this.targetX - this.x;
+                    const dy = this.targetY - this.y;
+                    if (Math.abs(dx) < this.speed && Math.abs(dy) < this.speed) {
+                        this.x = this.targetX;
+                        this.y = this.targetY;
+                        this.moving = false;
+                    } else {
+                        this.x += Math.sign(dx) * this.speed;
+                        this.y += Math.sign(dy) * this.speed;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = colors[this.type];
+                ctx.fillRect(this.x * blockSize, this.y * blockSize, blockSize - 1, blockSize - 1);
+            }
+        }
+
+        let blocks = [];
+        let blockSize = 8;
+        let cols, rows;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            cols = Math.floor(canvas.width / blockSize);
+            rows = Math.floor(canvas.height / blockSize);
+            initBlocks();
+        }
+
+        function initBlocks() {
+            blocks = [];
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const rand = Math.random();
+                    let type = 'empty';
+                    if (rand < 0.4) type = 'unfragmented';
+                    else if (rand < 0.6) type = 'fragmented';
+                    else if (rand < 0.7) type = 'compressed';
+                    else if (rand < 0.8) type = 'system';
+                    blocks.push(new Block(x, y, type));
+                }
+            }
+        }
+
+        function defragmentStep() {
+            // Find fragmented blocks and move them
+            for (let i = 0; i < blocks.length; i++) {
+                if (blocks[i].type === 'fragmented' && !blocks[i].moving && Math.random() < 0.1) {
+                    // Find empty space to move to
+                    for (let j = 0; j < blocks.length; j++) {
+                        if (blocks[j].type === 'empty') {
+                            blocks[i].moving = true;
+                            blocks[i].targetX = blocks[j].x;
+                            blocks[i].targetY = blocks[j].y;
+                            blocks[j].type = 'fragmented';
+                            blocks[i].type = 'empty';
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = colors.empty;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            defragmentStep();
+            blocks.forEach(block => {
+                block.update();
+                block.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Commodore 64 Boot</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0000AA;
+            overflow: hidden;
+            font-family: monospace;
+        }
+        canvas {
+            width: 100%;
+            height: 100vh;
+            image-rendering: pixelated;
+        }
+        #screen {
+            position: relative;
+            height: 100vh;
+        }
+        #scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                transparent 50%,
+                rgba(0, 0, 0, 0.2) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+        #crt {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                circle at center,
+                transparent 0%,
+                rgba(0, 0, 0, 0.3) 100%
+            );
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="screen">
+        <canvas id="c64"></canvas>
+        <div id="scanlines"></div>
+        <div id="crt"></div>
+    </div>
+    <script>
+        const canvas = document.getElementById('c64');
+        const ctx = canvas.getContext('2d');
+        const C64_BLUE = '#0000AA';
+        const C64_CYAN = '#00FFFF';
+        let time = 0;
+        let bootPhase = 0;
+        let textBuffer = [];
+        
+        const bootSequence = [
+            '**** COMMODORE 64 BASIC V2 ****',
+            '64K RAM SYSTEM  38911 BASIC BYTES FREE',
+            'READY.',
+            '█'
+        ];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.font = '24px monospace';
+            ctx.textBaseline = 'top';
+        }
+
+        function drawText() {
+            ctx.fillStyle = C64_BLUE;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = C64_CYAN;
+            textBuffer.forEach((line, i) => {
+                // Add phosphor glow effect
+                ctx.shadowColor = 'rgba(0, 255, 255, 0.5)';
+                ctx.shadowBlur = 4;
+                ctx.fillText(line, 40, 40 + (i * 32));
+            });
+        }
+
+        function animate() {
+            drawText();
+            
+            // Boot sequence timing
+            if (time % 60 === 0 && bootPhase < bootSequence.length) {
+                textBuffer.push(bootSequence[bootPhase]);
+                bootPhase++;
+            }
+            
+            // Cursor blink
+            if (bootPhase === bootSequence.length) {
+                if (Math.floor(time / 30) % 2 === 0) {
+                    textBuffer[textBuffer.length - 1] = 'READY.█';
+                } else {
+                    textBuffer[textBuffer.length - 1] = 'READY. ';
+                }
+            }
+            
+            time++;
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sony Connected Identity</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000033;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="sony"></canvas>
+    <canvas id="debug"></canvas>
+    <script>
+        const WORDS_FIRST = [
+            'CREATE', 'DREAM', 'THINK', 'GROW', 'BUILD',
+            'SPARK', 'FORGE', 'SHAPE', 'FLOW', 'PUSH', "SONY"
+        ];
+        
+        const WORDS_SECOND = [
+            'FUTURE', 'BEYOND', 'FOCUS', 'VISION', 'LIGHT',
+            'POWER', 'FORCE', 'MIND', 'SELF', 'PATH'
+        ];
+
+        // Update MATRIX_FONT to use 5x5 grid
+        const MATRIX_FONT = {
+            'A': [
+                '01110',
+                '10001',
+                '11111',
+                '10001',
+                '10001'
+            ],
+            'B': [
+                '11110',
+                '10001',
+                '11110',
+                '10001',
+                '11110'
+            ],
+            'C': [
+                '01111',
+                '10000',
+                '10000',
+                '10000',
+                '01111'
+            ],
+            'D': [
+                '11110',
+                '10001',
+                '10001',
+                '10001',
+                '11110'
+            ],
+            'E': [
+                '11111',
+                '10000',
+                '11110',
+                '10000',
+                '11111'
+            ],
+            'F': [
+                '11111',
+                '10000',
+                '11110',
+                '10000',
+                '10000'
+            ],
+            'G': [
+                '01111',
+                '10000',
+                '10111',
+                '10001',
+                '01111'
+            ],
+            'H': [
+                '10001',
+                '10001',
+                '11111',
+                '10001',
+                '10001'
+            ],
+            'I': [
+                '11111',
+                '00100',
+                '00100',
+                '00100',
+                '11111'
+            ],
+            'K': [
+                '10001',
+                '10010',
+                '11100',
+                '10010',
+                '10001'
+            ],
+            'L': [
+                '10000',
+                '10000',
+                '10000',
+                '10000',
+                '11111'
+            ],
+            'M': [
+                '10001',
+                '11011',
+                '10101',
+                '10001',
+                '10001'
+            ],
+            'N': [
+                '10001',
+                '11001',
+                '10101',
+                '10011',
+                '10001'
+            ],
+            'O': [
+                '01110',
+                '10001',
+                '10001',
+                '10001',
+                '01110'
+            ],
+            'P': [
+                '11110',
+                '10001',
+                '11110',
+                '10000',
+                '10000'
+            ],
+            'R': [
+                '11110',
+                '10001',
+                '11110',
+                '10010',
+                '10001'
+            ],
+            'S': [
+                '01111',
+                '10000',
+                '01110',
+                '00001',
+                '11110'
+            ],
+            'T': [
+                '11111',
+                '00100',
+                '00100',
+                '00100',
+                '00100'
+            ],
+            'U': [
+                '10001',
+                '10001',
+                '10001',
+                '10001',
+                '01110'
+            ],
+            'V': [
+                '10001',
+                '10001',
+                '10001',
+                '01010',
+                '00100'
+            ],
+            'W': [
+                '10001',
+                '10001',
+                '10101',
+                '11011',
+                '10001'
+            ],
+            'Y': [
+                '10001',
+                '01010',
+                '00100',
+                '00100',
+                '00100'
+            ],
+            '-': [
+                '00000',
+                '00000',
+                '01110',
+                '00000',
+                '00000'
+            ]
+        };
+
+        const generatedText = Math.random() < 0.5 ? 
+            WORDS_FIRST[Math.floor(Math.random() * WORDS_FIRST.length)] :
+            `${WORDS_FIRST[Math.floor(Math.random() * WORDS_FIRST.length)]}-${WORDS_SECOND[Math.floor(Math.random() * WORDS_SECOND.length)]}`;
+
+        // Modify textToParticles to limit text width
+        function textToParticles(text, startY = 0.4) {
+            const maxLength = 12; // Maximum safe length
+            if (text.length > maxLength) {
+                text = text.substring(0, maxLength);
+            }
+            const points = [];
+            const letters = text.split('');
+            
+            const letterWidth = 0.25;
+            const totalWidth = letters.length * letterWidth;
+            let currentX = (1 - totalWidth) / 2;
+            
+            letters.forEach((letter, letterIndex) => {
+                const matrix = MATRIX_FONT[letter];
+                if (!matrix) return;
+
+                matrix.forEach((row, y) => {
+                    row.split('').forEach((cell, x) => {
+                        if (cell === '1') {
+                            points.push([
+                                currentX + (x * 0.05),
+                                startY + (y * 0.05)
+                            ]);
+                        }
+                    });
+                });
+
+                currentX += letterWidth;
+            });
+
+            return points;
+        }
+
+        const canvas = document.getElementById('sony');
+        const debug = document.getElementById('debug');
+        const ctx = canvas.getContext('2d');
+        const debugCtx = debug.getContext('2d');
+        let time = 0;
+        const particles = [];
+        const bgColor = `hsl(${Math.random() * 360}, 50%, 10%)`;
+        const dotColor = `hsl(${Math.random() * 360}, 50%, 50%)`;
+        
+        // Global rotation state with random axis selection and glitch settings
+        const rotation = {
+            axis: Math.random() < 0.5 ? 'x' : 'y',
+            speed: 0.002 + Math.random() * 0.02, // Random speed between 0.002 and 0.01
+            angle: 0,
+            isGlitchy: Math.random() < 0.3, // 30% chance to be glitchy
+            glitchIntensity: 0.2 + Math.random() * 0.8, // Random glitch intensity
+            lastGlitch: 0
+        };
+
+        // Add glitch line settings
+        const glitchLine = {
+            active: false,
+            startParticle: null,
+            endParticle: null,
+            duration: 0,
+            maxDuration: 5, // How long a line stays visible
+            opacity: 0
+        };
+
+        function updateRotation() {
+            if (rotation.isGlitchy) {
+                // Random glitch jumps
+                if (Math.random() < 0.1) { // 2% chance per frame to glitch
+                    rotation.angle += (Math.random() - 0.5) * Math.PI * rotation.glitchIntensity;
+                }
+            }
+            rotation.angle += rotation.speed;
+        }
+
+        function rotate3D(point) {
+            const baseScale = Math.min(canvas.width, canvas.height);
+            
+            let x = (point.x / canvas.width - 0.5) * baseScale;
+            let y = (point.y / canvas.height - 0.5) * baseScale;
+            let z = 0;
+
+            // Use rotation.angle instead of time
+            if (rotation.axis === 'y') {
+                const cos = Math.cos(rotation.angle);
+                const sin = Math.sin(rotation.angle);
+                const tempX = x * cos - z * sin;
+                z = x * sin + z * cos;
+                x = tempX;
+            } else {
+                const cos = Math.cos(rotation.angle);
+                const sin = Math.sin(rotation.angle);
+                const tempY = y * cos - z * sin;
+                z = y * sin + z * cos;
+                y = tempY;
+            }
+
+            // Add safety limits for z-position
+            z = Math.max(z, -900); // Prevent z from getting too close
+            
+            // Limit scale to prevent extreme sizes
+            const perspective = 1000;
+            let scale = perspective / (perspective + z);
+            scale = Math.min(scale, 4.0); // Limit maximum scale
+
+            // Add bounds checking for final coordinates
+            const screenX = canvas.width/2 + x * scale;
+            const screenY = canvas.height/2 + y * scale;
+
+            // Return null if position is invalid
+            if (!isFinite(screenX) || !isFinite(screenY) || !isFinite(scale)) {
+                return null;
+            }
+
+            return {
+                x: screenX,
+                y: screenY,
+                scale: scale
+            };
+        }
+
+        class Particle {
+            constructor(targetX, targetY) {
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.radius = Math.min(canvas.width, canvas.height) * 0.016;
+            }
+
+            draw() {
+                const pos = rotate3D({
+                    x: this.targetX,
+                    y: this.targetY
+                });
+
+                // Skip rendering if position is invalid
+                if (!pos) return;
+
+                // Limit final radius size
+                const finalRadius = Math.min(
+                    this.radius * pos.scale * 1.1,
+                    Math.min(canvas.width, canvas.height) * 0.1
+                );
+
+                // Create gradient for subtle edge blur
+                const gradient = ctx.createRadialGradient(
+                    pos.x, pos.y, 0,
+                    pos.x, pos.y, finalRadius
+                );
+
+                // Parse the dotColor to RGB components for gradient
+                const color = dotColor.match(/\d+/g);
+                const r = color[0];
+                const g = color[1];
+                const b = color[2];
+
+                // More solid core with very subtle edge fade
+                gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 1)`);
+                gradient.addColorStop(0.8, `rgba(${r}, ${g}, ${b}, 1)`); // Solid until 80%
+                gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);   // Only blur the outer 20%
+
+                ctx.beginPath();
+                ctx.fillStyle = gradient;
+                // Only slightly bigger for the blur edge
+                ctx.arc(pos.x, pos.y, finalRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Replace textPoints array with only generated text
+        const textPoints = textToParticles(generatedText);
+
+        function drawGlitchLines() {
+            // Randomly create new connection
+            if (!glitchLine.active && Math.random() < 0.01) { // 1% chance per frame
+                const availableParticles = particles.filter(p => p !== glitchLine.startParticle);
+                glitchLine.startParticle = availableParticles[Math.floor(Math.random() * availableParticles.length)];
+                glitchLine.endParticle = availableParticles[Math.floor(Math.random() * availableParticles.length)];
+                glitchLine.active = true;
+                glitchLine.duration = 0;
+                glitchLine.opacity = 0.8;
+            }
+
+            // Draw active glitch line
+            if (glitchLine.active) {
+                const start = rotate3D({
+                    x: glitchLine.startParticle.targetX,
+                    y: glitchLine.startParticle.targetY
+                });
+                const end = rotate3D({
+                    x: glitchLine.endParticle.targetX,
+                    y: glitchLine.endParticle.targetY
+                });
+
+                ctx.beginPath();
+                ctx.moveTo(start.x, start.y);
+                
+                // Add slight jitter to line
+                const midX = (start.x + end.x) / 2 + (Math.random() - 0.5) * 20;
+                const midY = (start.y + end.y) / 2 + (Math.random() - 0.5) * 20;
+                
+                ctx.quadraticCurveTo(midX, midY, end.x, end.y);
+                ctx.strokeStyle = `rgba(255,255,255,${glitchLine.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                glitchLine.duration++;
+                if (glitchLine.duration > glitchLine.maxDuration) {
+                    glitchLine.active = false;
+                }
+            }
+        }
+
+        function drawDebug() {
+            debug.width = 300;
+            debug.height = 200;
+            
+            // Clear debug canvas
+            debugCtx.fillStyle = 'rgba(0,0,0,0.8)';
+            debugCtx.fillRect(0, 0, debug.width, debug.height);
+            
+            // Draw grid
+            debugCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+            debugCtx.lineWidth = 1;
+            
+            // Vertical lines
+            for(let x = 0; x <= 1; x += 0.1) {
+                debugCtx.beginPath();
+                debugCtx.moveTo(x * debug.width, 0);
+                debugCtx.lineTo(x * debug.width, debug.height);
+                debugCtx.stroke();
+            }
+            
+            // Horizontal lines
+            for(let y = 0; y <= 1; y += 0.1) {
+                debugCtx.beginPath();
+                debugCtx.moveTo(0, y * debug.height);
+                debugCtx.lineTo(debug.width, y * debug.height);
+                debugCtx.stroke();
+            }
+            
+            // Draw dots
+            debugCtx.fillStyle = dotColor;
+            textPoints.forEach((point, i) => {
+                debugCtx.beginPath();
+                debugCtx.arc(
+                    point[0] * debug.width,
+                    point[1] * debug.height,
+                    3,
+                    0,
+                    Math.PI * 2
+                );
+                debugCtx.fill();
+                
+                // Add index numbers
+                debugCtx.fillStyle = 'white';
+                debugCtx.font = '10px monospace';
+                debugCtx.fillText(i.toString(), 
+                    point[0] * debug.width + 5,
+                    point[1] * debug.height + 5
+                );
+            });
+
+            // Add generated text display
+            debugCtx.fillStyle = 'white';
+            debugCtx.font = '16px monospace';
+            debugCtx.fillText(`Generated Text: ${generatedText}`, 10, 20);
+        }
+
+        function init() {
+            particles.length = 0;
+            textPoints.forEach(point => {
+                particles.push(new Particle(
+                    point[0] * canvas.width,
+                    point[1] * canvas.height
+                ));
+            });
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            init();
+        }
+
+        function animate() {
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            updateRotation();
+            particles.forEach(particle => particle.draw());
+            drawGlitchLines(); // Draw lines after particles
+            
+            drawDebug();
+            time++;
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</body>
+</html>

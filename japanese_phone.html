@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Japanese Phone UI</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #102030;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        canvas {
+            width: 100%;
+            height: 100vh;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="phone"></canvas>
+    <script>
+        const canvas = document.getElementById('phone');
+        const ctx = canvas.getContext('2d');
+        let time = 0;
+        // TODO: add more authenticity
+        // Classic DoCoMo-style emoji patterns (5x5 pixel art)
+        const EMOJI = {
+            HEART: [
+                '01010',
+                '11111',
+                '11111',
+                '01110',
+                '00100'
+            ],
+            STAR: [
+                '00100',
+                '01110',
+                '10101',
+                '01110',
+                '10101'
+            ],
+            MUSIC: [
+                '00110',
+                '00101',
+                '00101',
+                '11101',
+                '11100'
+            ]
+        };
+
+        // Signal strength indicator pattern
+        const SIGNAL = [
+            '10000',
+            '11000',
+            '11100',
+            '11110',
+            '11111'
+        ];
+
+        // Add i-mode content items
+        const modeContent = {
+            news: [
+                "今日のニュース",
+                "天気予報",
+                "交通情報"
+            ],
+            menu: [
+                "着信音ダウンロード",
+                "待受画像",
+                "ゲームコーナー",
+                "占い"
+            ],
+            icons: [
+                "📱", "📮", "🎮", "🎵", "📰"
+            ]
+        };
+
+        class PhoneElement {
+            constructor(type, x, y, color = '#33FF33') {
+                this.type = type;
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.pattern = EMOJI[type] || SIGNAL;
+                this.alpha = 1;
+                this.scale = 3;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+
+                this.pattern.forEach((row, y) => {
+                    row.split('').forEach((pixel, x) => {
+                        if (pixel === '1') {
+                            ctx.fillRect(
+                                this.x + (x * this.scale),
+                                this.y + (y * this.scale),
+                                this.scale,
+                                this.scale
+                            );
+                        }
+                    });
+                });
+                ctx.restore();
+            }
+        }
+
+        // UI Elements
+        const elements = [];
+        const signalStrength = {
+            level: 4,
+            x: 20,
+            y: 20,
+            lastUpdate: 0
+        };
+
+        function drawSignalStrength() {
+            // Update signal level randomly
+            if (time - signalStrength.lastUpdate > 60) {
+                signalStrength.level = Math.max(1, Math.min(5, 
+                    signalStrength.level + (Math.random() < 0.5 ? -1 : 1)
+                ));
+                signalStrength.lastUpdate = time;
+            }
+
+            // Draw signal bars
+            for (let i = 0; i < 5; i++) {
+                ctx.fillStyle = i < signalStrength.level ? '#33FF33' : '#1A331A';
+                ctx.fillRect(
+                    signalStrength.x + (i * 6),
+                    signalStrength.y + (5 - i) * 3,
+                    4,
+                    3 + i * 3
+                );
+            }
+        }
+
+        function drawStatusBar() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { 
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            ctx.fillStyle = '#33FF33';
+            ctx.font = 'bold 16px monospace';
+            ctx.fillText(timeStr, canvas.width - 70, 30);
+        }
+
+        function drawIModeBrowser() {
+            // Browser frame
+            ctx.strokeStyle = '#33FF33';
+            ctx.strokeRect(20, 50, canvas.width - 40, canvas.height - 100);
+
+            // Menu bar
+            ctx.fillStyle = '#33FF33';
+            ctx.fillRect(20, 50, canvas.width - 40, 20);
+
+            // Menu items
+            ctx.fillStyle = '#102030';
+            ctx.font = '12px monospace';
+            ['メニュー', 'メール', 'ゲーム'].forEach((item, i) => {
+                ctx.fillText(item, 30 + (i * 80), 65);
+            });
+        }
+
+        function drawModeContent() {
+            // Content area
+            const contentX = 40;
+            let contentY = 90;
+            
+            // Draw content sections
+            ctx.fillStyle = '#33FF33';
+            ctx.font = '12px monospace';
+            
+            // News section
+            modeContent.news.forEach((item, i) => {
+                ctx.fillText(`${i + 1}. ${item}`, contentX, contentY);
+                contentY += 20;
+                
+                // Add blinking NEW icon randomly
+                if (Math.random() < 0.3) {
+                    if (Math.floor(time / 30) % 2 === 0) {
+                        ctx.fillStyle = '#FF3333';
+                        ctx.fillText('NEW!', contentX + 150, contentY - 20);
+                        ctx.fillStyle = '#33FF33';
+                    }
+                }
+            });
+
+            // Separator
+            contentY += 10;
+            ctx.fillRect(contentX, contentY, canvas.width - 80, 1);
+            contentY += 20;
+
+            // Menu items with icons
+            modeContent.menu.forEach((item, i) => {
+                // Icon background
+                ctx.fillStyle = '#1A331A';
+                ctx.fillRect(contentX, contentY - 12, 16, 16);
+                
+                // Menu text
+                ctx.fillStyle = '#33FF33';
+                ctx.fillText(`${modeContent.icons[i % 5]} ${item}`, contentX, contentY);
+                
+                // Access counter
+                const count = Math.floor(Math.random() * 9999);
+                ctx.fillStyle = '#1A661A';
+                ctx.fillText(`[${count}]`, contentX + 180, contentY);
+                
+                contentY += 25;
+            });
+
+            // Add scrolling banner
+            const bannerY = canvas.height - 60;
+            ctx.fillStyle = '#1A331A';
+            ctx.fillRect(20, bannerY, canvas.width - 40, 20);
+            
+            const bannerText = "★ NEW! 待受Flash配信中!! ★ 話題の着メロ続々入荷中! ★";
+            const scrollX = -((time * 2) % (bannerText.length * 12)) + canvas.width;
+            
+            ctx.fillStyle = '#33FF33';
+            ctx.fillText(bannerText, scrollX, bannerY + 14);
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initElements();
+        }
+
+        function initElements() {
+            elements.length = 0;
+            const types = ['HEART', 'STAR', 'MUSIC'];
+            const spacing = 100;
+            const rows = Math.ceil(canvas.height / spacing);
+            const cols = Math.ceil(canvas.width / spacing);
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    if (Math.random() < 0.3) {
+                        elements.push(new PhoneElement(
+                            types[Math.floor(Math.random() * types.length)],
+                            x * spacing + Math.random() * 20,
+                            y * spacing + Math.random() * 20
+                        ));
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            drawScene();
+            time++;
+            requestAnimationFrame(animate);
+        }
+
+        function drawScene() {
+            // Clear with scanline effect
+            ctx.fillStyle = '#102030';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Add subtle grid pattern
+            ctx.strokeStyle = 'rgba(51, 255, 51, 0.1)';
+            for (let i = 0; i < canvas.height; i += 4) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            drawIModeBrowser();
+            drawModeContent();  // Add new content
+            drawSignalStrength();
+            drawStatusBar();
+
+            elements.forEach(element => {
+                element.alpha = 0.5 + Math.sin(time * 0.05) * 0.2;
+                element.draw();
+            });
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gen X Soft Club</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #151515;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100vh;
+        }
+        .grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.12;
+            pointer-events: none;
+            background-image: url('data:image/png;base64,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');
+        }
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0.03) 50%,
+                rgba(0,0,0,0.03) 50%
+            );
+            background-size: 100% 4px;
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="genx"></canvas>
+    <div class="grain"></div>
+    <div class="scanlines"></div>
+    <script>
+        const canvas = document.getElementById('genx');
+        const ctx = canvas.getContext('2d');
+        let time = 0;
+
+        // Replace color generation with single-color variants
+        const baseHue = Math.random() * 360; // Choose one random hue at start
+
+        function getColorTone(index, total) {
+            // Create variations of the same color with different saturations and lightness
+            const baseSaturation = 15;
+            const baseLightness = 15;
+            
+            // Gradually decrease lightness and increase saturation
+            const saturation = baseSaturation + (index * 5);
+            const lightness = baseLightness + (index * 3);
+            
+            return `hsl(${baseHue}, ${saturation}%, ${lightness}%)`;
+        }
+
+        // Generate consistent theme colors
+        const colorSets = Array(6).fill().map((_, i) => ({
+            variant: getColorTone(i, 6)
+        }));
+
+        // Load and cache images
+        const images = {
+            skyline: new Image(),
+            texture: new Image()
+        };
+
+        // Image error handling
+        function handleImageError(e) {
+            console.warn(`Failed to load image: ${e.target.src}`);
+            e.target.failed = true; // Mark image as failed to avoid drawing
+        }
+
+        // Set up image sources and error handling
+        images.skyline.src = 'image.png';  // Replace with your image path
+        images.skyline.onerror = handleImageError;
+
+        images.texture.src = 'imag.png';  // Replace with your image path
+        images.texture.onerror = handleImageError;
+
+        // Add quotes array
+        const QUOTES = [
+            "LESS IS MORE",
+            "STAY SUBTLE",
+            "EMBRACE SILENCE",
+            "FIND PEACE",
+            "BE MINIMAL",
+            "SEEK QUIET",
+            "SLOW DOWN",
+            "BREATHE DEEP",
+            "STAY SOFT",
+            "REMAIN CALM"
+        ];
+
+        // Choose random quote at load
+        const currentQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+
+        // System info text with quote
+        function getSystemInfo() {
+            const date = new Date();
+            const time = date.toLocaleTimeString();
+            
+            // Detect OS
+            const platform = navigator.platform.toLowerCase();
+            const userAgent = navigator.userAgent.toLowerCase();
+            let os = 'SYS';
+            
+            if (platform.includes('win')) os = 'WINDOWS';
+            else if (platform.includes('mac')) os = 'MACOS';
+            else if (userAgent.includes('linux')) os = 'LINUX';
+            else if (userAgent.includes('android')) os = 'ANDROID';
+            else if (userAgent.includes('ios')) os = 'IOS';
+            
+            return [
+                `${time}`,
+                `${currentQuote}`,
+                `${os}`
+            ];
+        }
+
+        // Update typography settings
+        const typography = {
+            font: '200 24px "Space Mono", Menlo, monospace',
+            letterSpacing: '0.15em',
+            positions: [
+                {x: 0.05, y: 0.1},  // Top left for time
+                {x: 0.05, y: 0.15}, // Below time for quote
+                {x: 0.05, y: 0.2}   // Bottom for browser info
+            ],
+            update() {
+                this.text = getSystemInfo();
+            }
+        };
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        // Add gradient movement parameters
+        const gradientMovement = {
+            centerX: 0.3,
+            centerY: 0.3,
+            targetX: 0.3,
+            targetY: 0.3,
+            speed: 0.002
+        };
+
+        function updateGradientPosition() {
+            // Generate new target every few seconds
+            if (Math.random() < 0.005) {  // 0.5% chance per frame
+                gradientMovement.targetX = 0.2 + Math.random() * 0.6;
+                gradientMovement.targetY = 0.2 + Math.random() * 0.6;
+            }
+
+            // Smooth movement towards target
+            gradientMovement.centerX += (gradientMovement.targetX - gradientMovement.centerX) * gradientMovement.speed;
+            gradientMovement.centerY += (gradientMovement.targetY - gradientMovement.centerY) * gradientMovement.speed;
+        }
+
+        function createGradient() {
+            updateGradientPosition();
+            
+            const gradient = ctx.createRadialGradient(
+                canvas.width * gradientMovement.centerX, 
+                canvas.height * gradientMovement.centerY, 
+                0,
+                canvas.width * (gradientMovement.centerX + 0.2), 
+                canvas.height * (gradientMovement.centerY + 0.2), 
+                canvas.width * 0.8
+            );
+
+            // Add more color stops for smoother gradient
+            colorSets.forEach((set, i) => {
+                gradient.addColorStop(i / (colorSets.length - 1), set.variant);
+            });
+
+            return gradient;
+        }
+
+        function drawBlurredShapes() {
+            ctx.save();
+            ctx.filter = 'blur(70px)';
+            
+            colorSets.forEach((set, i) => {
+                ctx.beginPath();
+                ctx.fillStyle = set.variant;
+                ctx.globalAlpha = 0.07;
+                
+                const x = canvas.width * (0.2 + Math.sin(time/50 + i) * 0.1);
+                const y = canvas.height * (0.3 + Math.cos(time/40 + i) * 0.1);
+                
+                ctx.ellipse(x, y, 
+                    canvas.width * 0.3, 
+                    canvas.height * 0.3, 
+                    time/100, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            ctx.restore();
+        }
+
+        function drawBleachBypass(sourceCtx) {
+            const imageData = sourceCtx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                const l = (r + g + b) / 3;
+                data[i] = Math.min(255, l * 1.2);
+                data[i + 1] = Math.min(255, l * 1.1);
+                data[i + 2] = Math.min(255, l * 1.0);
+            }
+            
+            return imageData;
+        }
+
+        // Add image scaling function
+        function drawImageCovered(img, ctx, x, y, w, h) {
+            const imgRatio = img.width / img.height;
+            const containerRatio = w / h;
+            let drawWidth, drawHeight;
+            
+            if (containerRatio > imgRatio) {
+                drawWidth = w;
+                drawHeight = w / imgRatio;
+            } else {
+                drawHeight = h;
+                drawWidth = h * imgRatio;
+            }
+            
+            x = x + (w - drawWidth) / 2;
+            y = y + (h - drawHeight) / 2;
+            
+            return { x, y, width: drawWidth, height: drawHeight };
+        }
+
+        // Add directional blur function
+        function applyDirectionalBlur(ctx, angle, strength) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = ctx.canvas.width;
+            tempCanvas.height = ctx.canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Copy original image
+            tempCtx.drawImage(ctx.canvas, 0, 0);
+            
+            // Clear original canvas
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            
+            // Apply directional blur
+            const dx = Math.cos(angle) * 3;
+            const dy = Math.sin(angle) * 0;
+            const steps = 10;
+            
+            ctx.globalAlpha = 1 / steps;
+            for (let i = 0; i < steps; i++) {
+                const offsetX = dx * (i - steps/2);
+                const offsetY = dy * (i - steps/2);
+                ctx.drawImage(tempCanvas, offsetX, offsetY);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function drawScene() {
+            // Update system info text before drawing
+            typography.update();
+            
+            // Clear canvas
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Only draw images if they loaded successfully
+            if (images.skyline.complete && !images.skyline.failed) {
+                // Draw skyline with proper scaling
+                ctx.globalAlpha = 0.7;
+                const skylineDims = drawImageCovered(images.skyline, ctx, 0, 0, canvas.width, canvas.height);
+                ctx.drawImage(images.skyline, 
+                    skylineDims.x, skylineDims.y, 
+                    skylineDims.width, skylineDims.height
+                );
+                
+                // Apply horizontal blur to skyline
+                applyDirectionalBlur(ctx, 0, 15);
+                ctx.putImageData(drawBleachBypass(ctx), 0, 0);
+            }
+
+            // Draw gradient overlay
+            const gradient = createGradient();
+            ctx.globalAlpha = 0.8;
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw blurred shapes
+            ctx.globalAlpha = 1;
+            drawBlurredShapes();
+
+            // Draw typography
+            ctx.font = typography.font;
+            ctx.textAlign = 'left';
+            typography.text.forEach((text, i) => {
+                const pos = typography.positions[i];
+                const letters = text.split('');
+                const letterWidth = ctx.measureText('M').width * 1.2; // Wider spacing
+                
+                letters.forEach((letter, j) => {
+                    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                    ctx.fillText(letter,
+                        pos.x * canvas.width + (j * letterWidth),
+                        pos.y * canvas.height
+                    );
+                });
+            });
+
+            // Add texture overlay
+            if (images.texture.complete && !images.texture.failed) {
+                // Draw texture with proper scaling
+                ctx.globalAlpha = 0.1;
+                ctx.globalCompositeOperation = 'overlay';
+                const textureDims = drawImageCovered(images.texture, ctx, 0, 0, canvas.width, canvas.height);
+                ctx.drawImage(images.texture, 
+                    textureDims.x, textureDims.y, 
+                    textureDims.width, textureDims.height
+                );
+                
+                // Apply diagonal blur to texture
+                applyDirectionalBlur(ctx, 0, 1);
+                ctx.globalCompositeOperation = 'source-over';
+            }
+        }
+
+        function animate() {
+            drawScene();
+            time++;
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</body>
+</html>
